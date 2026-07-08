@@ -57,6 +57,7 @@ test('toPublicSummary reports $CUPSY + $ANSEM distributed, current eligible hold
       ANSEM: { sends: 3, totalUi: 700, holders: 30 },
     },
     eligibleHolders: 42,
+    totalHolders: 1200,
     price: 150,
     cupsyMint: 'CUPSY',
     ansemMint: 'ANSEM',
@@ -67,6 +68,7 @@ test('toPublicSummary reports $CUPSY + $ANSEM distributed, current eligible hold
   assert.strictEqual(out.cupsyDistributed, 2000);
   assert.strictEqual(out.ansemDistributed, 700);
   assert.strictEqual(out.holders, 42);
+  assert.strictEqual(out.totalHolders, 1200);
   assert.strictEqual(out.distributions, 8, 'sum of both streams');
   assert.strictEqual(out.marketCapUsd, 55_620_000);
   assert.ok(!('benkBurned' in out), 'benkBurned should be gone');
@@ -87,7 +89,8 @@ test('toPublicSummary zeroes a stream with no sends yet', () => {
   assert.strictEqual(out.distributions, 5);
 });
 
-test('toPublicSummary marketCapUsd defaults to null when not provided', () => {
+test('toPublicSummary marketCapUsd and totalHolders default to null when not provided', () => {
   const out = toPublicSummary({ stats: {}, byMint: {}, price: 0, cupsyMint: 'CUPSY', ansemMint: 'ANSEM' });
   assert.strictEqual(out.marketCapUsd, null);
+  assert.strictEqual(out.totalHolders, null, 'null until a cycle has recorded it');
 });

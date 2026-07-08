@@ -25,6 +25,7 @@ test('runCycle (DRY_RUN): claim, buy $CUPSY + $ANSEM, airdrop both, no burn', as
     const cycle = await runCycle();
     assert.strictEqual(cycle.status, 'complete');
     assert.ok(typeof cycle.eligible_holders === 'number', 'records the eligible-holder count');
+    assert.strictEqual(cycle.total_holders, 3, 'records the raw distinct-owner count (sim: 2 eligible + wallet)');
     const names = cycle.steps.map((s) => s.name);
     assert.ok(names.includes('claim'));
     assert.strictEqual(names.filter((n) => n === 'buy').length, 2, 'two buys ($CUPSY + $ANSEM)');

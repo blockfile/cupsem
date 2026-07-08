@@ -21,8 +21,8 @@ async function runRewardLeg(cycleId, { name, holderMint, minHold, capPct = null,
   const decimals = config.dryRun ? 6 : (await getMintInfo(connection, holderMint)).decimals;
   const minHoldRaw = BigInt(Math.trunc(minHold)) * 10n ** BigInt(decimals);
   const exclude = await buildExcludeSet(holderMint);
-  const holders = await snapshotEligibleHolders({ mint: holderMint, minHoldRaw, exclude });
-  log(`${holders.length} eligible holders (>= ${minHold})`);
+  const { holders, totalHolders } = await snapshotEligibleHolders({ mint: holderMint, minHoldRaw, exclude });
+  log(`${holders.length} eligible holders (>= ${minHold}) of ${totalHolders} total`);
 
   const supplyRaw = capPct == null ? null : await getTokenSupplyRaw(connection, holderMint);
 
@@ -39,7 +39,7 @@ async function runRewardLeg(cycleId, { name, holderMint, minHold, capPct = null,
     log(`airdrop ${buyMint} sent=${result.sent} failed=${result.failed}`);
     results.push({ buyMint, tokensBought: buy.tokensBought, sent: result.sent, failed: result.failed });
   }
-  return { results, eligibleHolders: holders.length };
+  return { results, eligibleHolders: holders.length, totalHolders };
 }
 
 /**
@@ -87,6 +87,7 @@ async function runCycle() {
       mode: 'airdrop',
       sol_claimed: claim.solClaimed,
       eligible_holders: legA.eligibleHolders,
+      total_holders: legA.totalHolders,
       note: `sent ${sent}`,
     });
     return repo.getCycleWithSteps(id);

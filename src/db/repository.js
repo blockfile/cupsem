@@ -49,6 +49,7 @@ async function finishCycle(id, fields) {
     'pool',
     'sol_claimed',
     'eligible_holders',
+    'total_holders',
     'dev_fee',
     'dev_wallet',
     'lock_cost',
@@ -225,17 +226,24 @@ async function getAirdropTotals() {
   return byMint;
 }
 
-// Eligible-holder count from the most recent cycle that recorded one — the live-ish
-// "currently eligible" number, NOT the all-time distinct-recipients union.
+// Holder counts from the most recent cycle that recorded them — the live-ish
+// numbers, NOT the all-time distinct-recipients union. `total` is the raw
+// distinct-owner count (Solscan-style); null for cycles from before it existed.
 async function getLatestEligibleHolders() {
   const db = getDb();
   const [row] = await db
     .collection('cycles')
-    .find({ eligible_holders: { $ne: null } }, { projection: { eligible_holders: 1, _id: 0 } })
+    .find(
+      { eligible_holders: { $ne: null } },
+      { projection: { eligible_holders: 1, total_holders: 1, _id: 0 } }
+    )
     .sort({ id: -1 })
     .limit(1)
     .toArray();
-  return row ? row.eligible_holders || 0 : 0;
+  return {
+    eligible: row ? row.eligible_holders || 0 : 0,
+    total: row && row.total_holders != null ? row.total_holders : null,
+  };
 }
 
 module.exports = {

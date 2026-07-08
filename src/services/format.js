@@ -119,7 +119,7 @@ function buildUnclaimedPayload(sol, price) {
 
 // Headline numbers for the frontend: $CUPSY + $ANSEM distributed to holders.
 // byMint is keyed by reward_mint (repo.getAirdropTotals): { sends, totalUi, holders }.
-function toPublicSummary({ stats, byMint, eligibleHolders = 0, price, cupsyMint, ansemMint, marketCapUsd = null }) {
+function toPublicSummary({ stats, byMint, eligibleHolders = 0, totalHolders = null, price, cupsyMint, ansemMint, marketCapUsd = null }) {
   const z = { totalUi: 0, holders: 0, sends: 0 };
   const cupsy = byMint[cupsyMint] || z;
   const ansem = byMint[ansemMint] || z;
@@ -133,6 +133,9 @@ function toPublicSummary({ stats, byMint, eligibleHolders = 0, price, cupsyMint,
     ansemDistributed: ansem.totalUi,
     // currently-eligible holders (latest cycle's snapshot) — NOT the all-time recipient union
     holders: eligibleHolders,
+    // ALL wallets with any balance (Solscan-style), from the same snapshot;
+    // null until a cycle has recorded it
+    totalHolders,
     distributions: cupsy.sends + ansem.sends,
   };
 }

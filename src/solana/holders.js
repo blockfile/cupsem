@@ -19,8 +19,21 @@ function filterEligible(accounts, minHoldRaw, excludeSet) {
   return out;
 }
 
+// Pure: distinct owners with any nonzero balance — the "total holders" figure
+// (Solscan-style: no min-hold filter, no exclusions).
+function countOwners(accounts) {
+  const owners = new Set();
+  for (const a of accounts) {
+    if (BigInt(a.amountRaw.toString()) > 0n) owners.add(a.owner);
+  }
+  return owners.size;
+}
+
 // On-chain: all token accounts for `mint`, parsed + filtered. The SPL/Token-2022
 // account layout shares the first 72 bytes: mint[0..32], owner[32..64], amount u64 LE[64..72].
+// Returns { holders, totalHolders }: `holders` are the eligible per-owner
+// balances (>= minHold, exclusions applied); `totalHolders` is the raw distinct
+// owner count with any balance (what explorers like Solscan display).
 async function snapshotEligibleHolders({ mint, minHoldRaw, exclude }) {
   if (config.dryRun) {
     // Two simulated eligible holders + the wallet (excluded) so cycles exercise the path.
@@ -29,7 +42,7 @@ async function snapshotEligibleHolders({ mint, minHoldRaw, exclude }) {
       { owner: 'SimHolder222222222222222222222222222222222', amountRaw: String(BigInt(minHoldRaw) * 3n) },
       { owner: wallet.publicKey.toBase58(), amountRaw: String(BigInt(minHoldRaw) * 9n) },
     ];
-    return filterEligible(sim, minHoldRaw, exclude);
+    return { holders: filterEligible(sim, minHoldRaw, exclude), totalHolders: countOwners(sim) };
   }
   const { programId } = await getMintInfo(connection, mint);
   const accounts = await connection.getProgramAccounts(programId, {
@@ -42,7 +55,7 @@ async function snapshotEligibleHolders({ mint, minHoldRaw, exclude }) {
       amountRaw: data.readBigUInt64LE(64).toString(),
     };
   });
-  return filterEligible(parsed, minHoldRaw, exclude);
+  return { holders: filterEligible(parsed, minHoldRaw, exclude), totalHolders: countOwners(parsed) };
 }
 
-module.exports = { filterEligible, snapshotEligibleHolders };
+module.exports = { filterEligible, countOwners, snapshotEligibleHolders };

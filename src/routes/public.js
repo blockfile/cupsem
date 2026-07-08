@@ -120,7 +120,7 @@ router.get('/countdown', (req, res) => {
 
 // Headline numbers for the frontend.
 const loadSummary = cached(10000, async () => {
-  const [stats, byMint, eligibleHolders, price, market] = await Promise.all([
+  const [stats, byMint, holderCounts, price, market] = await Promise.all([
     repo.getStats(),
     repo.getAirdropTotals(),
     repo.getLatestEligibleHolders(),
@@ -130,7 +130,8 @@ const loadSummary = cached(10000, async () => {
   return toPublicSummary({
     stats,
     byMint,
-    eligibleHolders,
+    eligibleHolders: holderCounts.eligible,
+    totalHolders: holderCounts.total,
     price,
     cupsyMint: config.cupsyMint,
     ansemMint: config.ansemMint,
